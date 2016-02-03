@@ -1,0 +1,3 @@
+This is text but the next line is true blank line
+
+END
