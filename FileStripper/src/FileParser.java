@@ -140,9 +140,7 @@ public class FileParser {
 			return array.toString();
 					
 		int posBlockCommentStart = getBlockCommentStartPosition(array);
-		
-		
-		
+						
 		if(posBlockCommentStart>0)
 		
 		int posLineComment = getLineCommentPosition(array);
