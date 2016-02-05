@@ -121,35 +121,75 @@ public class FileParser {
 		// Convert line to char. array.
 		char[] array = line.toCharArray();
 
+		// Handle case when we are in a black comment.
+		// Case 1 - No Stop Block Comment found, remove entire line
+		// Case 2 - Stop Block Comment found. Remove beginning of line through
+		// Stop Block Comment.
+		// Can we merge these cases?
+
+		// Get position of 1st stop block comment, "*/".
+		// -1 indicates no start block comment found.
+		int bcStop = getBlockCommentStopPosition(array);
+		int bcStart = getBlockCommentStopPosition(array);
+
+		if (isInBlockComment && bcStop < 0)
+			return null;
+
+		if (isInBlockComment && bcStop >= 0) {
+
+			// trim beginning of array up to bcStart.
+			char[] newArray = new char[array.length - bcStop];
+			for (int i = bcStop; i < array.length; i++) {
+				newArray[i - bcStop] = array[i];
+			}
+			array = newArray;
+			isInBlockComment = false;
+		}
+
+		do {
+			bcStart = getBlockCommentStartPosition(array);
+			bcStop = getBlockCommentStopPosition(array);
+
+		} while (bcStart == -1 || bcStop == -1);
+
+		// HANDLE LINES WITH MULTIPLE COMMENTS
+		// good text // comment
+		// good text /* comment */ good text /* comment */ good text // line
+		// comment.
+
+		// Lets process any line comment first and then process any block
+		// comments.
+
+		// Get position of 1st start block comment, "/*".
+		// -1 indicates no start block comment found.
+		// bcStart = getBlockCommentStartPosition(array);
+
 		// Handle whitespace
 		if (isLineWhitespace(array))
 			return null;
 
 		// Handle block comment.
-		if(hasBlockCommentStop(array)){			
+		if (hasBlockCommentStop(array)) {
 			int posBlockCommentStop = getBlockCommentStopPosition(array);
-			
-			if(isInBlockComment && posBlockCommentStop>0)
-			{
+
+			if (isInBlockComment && posBlockCommentStop > 0) {
 				isInBlockComment = false;
 				return array.toString().substring(0, posBlockCommentStop);
 			}
-		}	
-					
-		if(isInBlockComment)
-			return array.toString();
-					
-		int posBlockCommentStart = getBlockCommentStartPosition(array);
-						
-		if(posBlockCommentStart>0)
-		
-		int posLineComment = getLineCommentPosition(array);
+		}
 
-		if(isInBlockComment && posBlockCommentStop>0)
-			return array.toString().substring(0, posBlockCommentStop);
-		
-		
-		
+		if (isInBlockComment)
+			return array.toString();
+
+		int posBlockCommentStart = getBlockCommentStartPosition(array);
+
+		// if(posBlockCommentStart>=0)
+
+		// int posLineComment = getLineCommentPosition(array);
+
+		// if(isInBlockComment && posBlockCommentStop>0)
+		// return array.toString().substring(0, posBlockCommentStop);
+
 		// Handle full line comment
 		// if(array.length > 1 && array[0]=='/' && array[1]=='/' ){
 		// return null;
@@ -193,20 +233,22 @@ public class FileParser {
 		return false;
 	}
 
-	private static int getBlockCommentStopPosition(char[] array) throws Exception {
-		
+	private static int getBlockCommentStopPosition(char[] array) {
+
 		for (int i = 1; i < array.length - 1; i++) {
 
 			if (array[i - 1] == '*' && array[i] == '/') {
-				return i - 1;
+				return i;
 			}
 		}
 
-		throw new Exception("Cannot find block comment stop position.");
+		// -1 indicates no stop block comment found.
+		return -1;
+
 	}
 
 	private static int getLineCommentPosition(char[] array) {
-		
+
 		for (int i = 1; i < array.length - 1; i++) {
 
 			if (array[i - 1] == '/' && array[i] == '/') {
